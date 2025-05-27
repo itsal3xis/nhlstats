@@ -68,13 +68,23 @@ th { color: #4fc3f7; font-weight: 600; }
                         <img src="{{ player.headshot }}" alt="Headshot" class="headshot-bubble">
                     {% endif %}
                 </div>
-                <h1>{{ player.name }}</h1>
+                <h1>
+                    {% if player.teamLogo %}
+                        <img src="{{ player.teamLogo }}" alt="Logo" style="height:26px;vertical-align:middle;margin-right:8px;">
+                    {% endif %}
+                    #{{ player.sweaterNumber }} {{ player.name }}
+                </h1>
                 {% if player.elo %}
-                    <div class="elo">ELO : {{ player.elo|round|int }}</div>
+                    <div class="elo">
+                        ELO : {{ player.elo|round|int }}
+                        {% if best_in_position %}
+                            <span title="Best ELO at this position">👑</span>
+                        {% endif %}
+                    </div>
                 {% endif %}
                 <ul class="player-stats-list">
                     {% for key, value in player.items() %}
-                        {% if key not in ['id', 'name', 'heroImage', 'headshot', 'elo'] %}
+                        {% if key not in ['id', 'name', 'heroImage', 'headshot', 'elo', 'teamLogo', 'sweaterNumber'] %}
                             <li>
                                 <span class="stat-key">
                                     {{ key|replace('_', ' ')|capitalize }}
