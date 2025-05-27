@@ -1,8 +1,5 @@
 import matplotlib
 matplotlib.use('Agg')
-
-import logic.collector
-import logic.analyst
 from flask import Flask, render_template, request, jsonify
 import json
 import os
@@ -11,6 +8,7 @@ import io
 import base64
 
 app = Flask(__name__)
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATISTICS_DIR = os.path.join(BASE_DIR, "logic", "statistics")
@@ -153,22 +151,81 @@ def detailed_player_info(player_id):
 
 @app.route('/duel/<int:player1_id>/<int:player2_id>')
 def detailed_duel(player1_id, player2_id):
+    import os, json
     with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
         stats = json.load(f)
     with open(os.path.join(STATISTICS_DIR, "playerelo.json"), "r", encoding="utf-8") as f:
         elos = json.load(f)
-    player1 = next((s for s in stats if s['id'] == player1_id), None)
-    player2 = next((s for s in stats if s['id'] == player2_id), None)
-    if not player1 or not player2:
-        return "Joueur introuvable", 404
-    # Ajoute l'elo depuis playerelo.json
-    for player in (player1, player2):
-        elo_info = elos.get(str(player['id']))
-        if elo_info and 'elo' in elo_info:
-            player['elo'] = elo_info['elo']
+
+    # Find player stats and merge with ELO
+    def get_player(pid):
+        stat = next((s for s in stats if str(s.get('id')) == str(pid)), {})
+        elo = elos.get(str(pid), {}).get('elo', 0)
+        # Provide defaults if missing
+        return {
+            "id": pid,
+            "name": stat.get("name", f"Player {pid}"),
+            "headshot": stat.get("headshot", stat.get("heroImage", "")),
+            "elo": elo,
+            "goals": stat.get("goals", 0),
+            "assists": stat.get("assists", 0),
+            "points": stat.get("points", 0),
+            "plusMinus": stat.get("plusMinus", 0),
+            "gamesPlayed": stat.get("gamesPlayed", 0),
+            "sweaterNumber": stat.get("sweaterNumber", ""),
+            "teamLogo": stat.get("teamLogo", ""),
+        }
+
+    player1 = get_player(player1_id)
+    player2 = get_player(player2_id)
+
+    # Stat comparison logic (as before)
+    stat_keys = ["goals", "assists", "points", "plusMinus"]
+    stat_labels = {
+        "goals": "Buts",
+        "assists": "Aides",
+        "points": "Points",
+        "plusMinus": "+/-",
+        "gamesPlayed": "Matchs",
+        "elo": "ELO"
+    }
+    comparison = []
+    p1_score = 0
+    p2_score = 0
+    for key in stat_keys:
+        v1 = player1.get(key, 0)
+        v2 = player2.get(key, 0)
+        if v1 > v2:
+            winner = 1
+            p1_score += 1
+        elif v2 > v1:
+            winner = 2
+            p2_score += 1
         else:
-            player['elo'] = None
-    return render_template('duel.html', player1=player1, player2=player2)
+            winner = 0
+        comparison.append({
+            "label": stat_labels.get(key, key),
+            "p1": v1,
+            "p2": v2,
+            "winner": winner
+        })
+
+    if p1_score > p2_score:
+        duel_winner = 1
+    elif p2_score > p1_score:
+        duel_winner = 2
+    else:
+        duel_winner = 0
+
+    return render_template(
+        'duel.html',
+        player1=player1,
+        player2=player2,
+        comparison=comparison,
+        p1_score=p1_score,
+        p2_score=p2_score,
+        duel_winner=duel_winner
+    )
 
 @app.route('/autocomplete', methods=['GET'])
 def autocomplete():
@@ -200,7 +257,7 @@ if __name__ == '__main__':
         os.makedirs(STATISTICS_DIR)
 
     # Collect data if needed
-    if not os.path.exists(os.path.join(STATISTICS_DIR, "playerelo.json")):
-        logic.collector.collector()
+    #if not os.path.exists(os.path.join(STATISTICS_DIR, "playerelo.json")):
+        #logic.collector.collector()
     
     app.run(debug=False, port=5001)
