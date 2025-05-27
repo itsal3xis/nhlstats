@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Détails joueur NHL</title>
+    <style>
+body { background: #181c24; color: #f5f6fa; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin: 0; }
+.container { max-width: 1200px; margin: 40px auto; background: #232a36; border-radius: 16px; box-shadow: 0 4px 24px #000a; padding: 32px 24px 24px 24px; }
+.main-flex { display: flex; gap: 32px; flex-wrap: wrap; }
+.left-col { flex: 1 1 340px; min-width: 320px; max-width: 420px; }
+.right-col { flex: 2 1 500px; min-width: 340px; display: flex; flex-direction: column; align-items: stretch; }
+.hero-img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; }
+.headshot-bubble { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 2px 8px #0007; position: absolute; left: 24px; bottom: -45px; background: #232a36; }
+h1 { margin-top: 60px; font-size: 2rem; }
+.elo { font-size: 1.3rem; font-weight: 700; color: #4fc3f7; margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+th, td { padding: 8px 6px; border-bottom: 1px solid #232a36; text-align: left; }
+th { color: #4fc3f7; font-weight: 600; }
+.elo-graph { width: 100%; max-width: 100%; border-radius: 12px; box-shadow: 0 2px 8px #0007; background: #181c24; }
+.player-stats-list {
+    list-style: none;
+    padding: 0;
+    margin: 22px 0 0 0;
+}
+.player-stats-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid #232a36;
+    font-size: 1.08em;
+    letter-spacing: 0.01em;
+}
+.stat-key {
+    color: #4fc3f7;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.stat-value {
+    color: #fff;
+    font-weight: 400;
+    margin-left: 18px;
+    text-align: right;
+}
+.player-stats-list li:last-child {
+    border-bottom: none;
+}
+@media (max-width: 900px) {
+    .main-flex { flex-direction: column; }
+    .right-col, .left-col { max-width: 100%; }
+    .hero-img { max-height: 180px; }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('index') }}" class="back-link">&larr; Retour</a>
+        <div class="main-flex">
+            <!-- Colonne stats -->
+            <div class="left-col">
+                <div style="position:relative;">
+                    {% if player.heroImage %}
+                        <img src="{{ player.heroImage }}" alt="Hero" class="hero-img">
+                    {% else %}
+                        <div class="hero-img" style="background:#232a36;"></div>
+                    {% endif %}
+                    {% if player.headshot %}
+                        <img src="{{ player.headshot }}" alt="Headshot" class="headshot-bubble">
+                    {% endif %}
+                </div>
+                <h1>{{ player.name }}</h1>
+                {% if player.elo %}
+                    <div class="elo">ELO : {{ player.elo|round|int }}</div>
+                {% endif %}
+                <ul class="player-stats-list">
+                    {% for key, value in player.items() %}
+                        {% if key not in ['id', 'name', 'heroImage', 'headshot', 'elo'] %}
+                            <li>
+                                <span class="stat-key">
+                                    {{ key|replace('_', ' ')|capitalize }}
+                                </span>
+                                <span class="stat-value">{{ value }}</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            <!-- Colonne graphique -->
+            <div class="right-col">
+                <form method="post" style="margin-bottom:18px;text-align:right;">
+                    <label for="compare_by" style="color:#4fc3f7;font-weight:600;">Compare by:</label>
+                    <select name="compare_by" id="compare_by" style="padding:6px 12px;border-radius:8px;background:#232a36;color:#fff;border:none;">
+                        <option value="position" {% if request.form.get('compare_by', 'position') == 'position' %}selected{% endif %}>Position</option>
+                        <option value="team" {% if request.form.get('compare_by') == 'team' %}selected{% endif %}>Team</option>
+                    </select>
+                    <button type="submit" style="padding:6px 18px;border-radius:8px;background:#039be5;color:#fff;font-weight:700;border:none;cursor:pointer;">Compare</button>
+                </form>
+                {% if elo_graph %}
+                    <img src="{{ elo_graph }}" alt="Comparaison ELO" class="elo-graph">
+                {% endif %}
+                {% if similar_player %}
+                    <div style="margin:36px 0 0 0;display:flex;align-items:center;justify-content:center;gap:32px;">
+                        <!-- Joueur courant -->
+                        <div style="text-align:center;">
+                            <img src="{{ player.headshot }}" alt="Headshot" style="width:80px;height:80px;border-radius:50%;border:3px solid #4fc3f7;background:#232a36;box-shadow:0 2px 8px #0007;">
+                            <div style="margin-top:8px;font-weight:700;">{{ player.name }}</div>
+                            <div style="color:#4fc3f7;font-size:1.1em;">ELO : {{ player.elo|round|int }}</div>
+                        </div>
+                        <div style="font-size:2.2em;font-weight:700;color:#fff;">VS</div>
+                        <!-- Joueur similaire -->
+                        <div style="text-align:center;">
+                            <img src="{{ similar_player.headshot }}" alt="Headshot" style="width:80px;height:80px;border-radius:50%;border:3px solid #ff7675;background:#232a36;box-shadow:0 2px 8px #0007;">
+                            <div style="margin-top:8px;font-weight:700;">{{ similar_player.name }}</div>
+                            <div style="color:#ff7675;font-size:1.1em;">ELO : {{ similar_player.elo|round|int }}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:center;color:#aaa;margin-top:10px;font-size:0.98em;">
+                        Duel avec le joueur le plus proche en ELO (même position)
+                    </div>
+                    <div style="text-align:center;margin-top:18px;">
+                        <a href="{{ url_for('detailed_duel', player1_id=player.id, player2_id=similar_player.id) }}">
+                            <button style="padding:8px 22px;border-radius:8px;background:#ff7675;color:#fff;font-weight:700;border:none;cursor:pointer;">
+                                Detailed duel
+                            </button>
+                        </a>
+                    </div>
+                {% else %}
+                    <div style="text-align:center;color:#aaa;margin-top:36px;font-size:1.05em;">
+                        Aucun autre joueur de même position trouvé pour le duel.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
