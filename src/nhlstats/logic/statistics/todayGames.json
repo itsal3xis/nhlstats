@@ -1,0 +1,15 @@
+[
+  {
+    "date": "2025-05-27",
+    "venue": "Rogers Place",
+    "startTimeUTC": "2025-05-28T00:00:00Z",
+    "homeTeam": {
+      "name": "Edmonton Oilers",
+      "abbrev": "EDM"
+    },
+    "awayTeam": {
+      "name": "Dallas Stars",
+      "abbrev": "DAL"
+    }
+  }
+]
