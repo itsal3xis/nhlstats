@@ -1,1 +1,6 @@
-get goalie statistics
+├── get goalie statistics for detailed, duels, elo
+|
+├── add more stats and analyse them (win%, hits)
+|
+├── ELO v2 with the complete stats
+
