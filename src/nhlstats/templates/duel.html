@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Detailed Duel</title>
@@ -45,8 +45,8 @@
 </head>
 <body>
     <div class="duel-container">
-        <a href="{{ url_for('detailed_player_info', player_id=player1.id) }}" style="color:#4fc3f7;">&larr; Retour</a>
-        <h2 style="text-align:center;margin-bottom:32px;">Duel détaillé</h2>
+        <a href="{{ url_for('detailed_player_info', player_id=player1.id) }}" style="color:#4fc3f7;">&larr; Back</a>
+        <h2 style="text-align:center;margin-bottom:32px;">Detailed Duel</h2>
         <div class="duel-flex">
             <div class="duel-player">
                 <img class="headshot" src="{{ player1.headshot }}" alt="Headshot">
@@ -73,7 +73,7 @@
         <table>
             <tr>
                 <th>{{ player1.name }}</th>
-                <th>Stat</th>
+                <th>Stats</th>
                 <th>{{ player2.name }}</th>
             </tr>
             {% for stat in comparison %}
@@ -93,11 +93,11 @@
             -
             <span style="color:limegreen;font-weight:bold;">{{ p2_score }}</span>
             {% if duel_winner == 1 %}
-                <span style="color:limegreen;">🏆 {{ player1.name }} gagne !</span>
+                <span style="color:limegreen;">🏆 {{ player1.name }} win !</span>
             {% elif duel_winner == 2 %}
-                <span style="color:limegreen;">🏆 {{ player2.name }} gagne !</span>
+                <span style="color:limegreen;">🏆 {{ player2.name }} win !</span>
             {% else %}
-                <span style="color:gold;">Égalité !</span>
+                <span style="color:gold;">Draw !</span>
             {% endif %}
         </div>
     </div>
