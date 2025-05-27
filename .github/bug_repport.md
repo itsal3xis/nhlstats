@@ -11,7 +11,7 @@ assignees: ''
 **Checklist**
 I have:
 - [ ] Searched the Issues page for my problem/feature request
-- [ ] Updated all related software and Pokete it self
+- [ ] Updated all related software and NHLSTATS it self
 
 **Describe the bug**
 A clear and concise description of what the bug is.
