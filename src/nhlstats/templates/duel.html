@@ -2,16 +2,45 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Duel détaillé</title>
+    <title>Detailed Duel</title>
     <style>
         body { background: #181c24; color: #f5f6fa; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin: 0; }
         .duel-container { max-width: 800px; margin: 40px auto; background: #232a36; border-radius: 16px; box-shadow: 0 4px 24px #000a; padding: 32px 24px; }
-        .duel-flex { display: flex; justify-content: space-around; align-items: center; gap: 32px; }
-        .duel-player { text-align: center; }
-        .duel-player img { width: 110px; height: 110px; border-radius: 50%; border: 4px solid #4fc3f7; background: #232a36; box-shadow: 0 2px 8px #0007; }
+        .duel-flex {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 32px;
+        }
+        .duel-player { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .duel-player .headshot {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 4px solid #4fc3f7;
+            background: #232a36;
+            box-shadow: 0 2px 8px #0007;
+}
         .duel-player .name { margin-top: 12px; font-weight: 700; font-size: 1.2em; }
         .duel-player .elo { color: #4fc3f7; font-size: 1.1em; margin-top: 4px; }
         .vs { font-size: 2.5em; font-weight: 700; color: #fff; }
+        table {
+            width: 80%;
+            max-width: 500px;
+            margin: 32px auto 0 auto;
+            text-align: center;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+        th { background: #2c2f38; }
+        tr:nth-child(even) { background: #2a2d36; }
+        .winner { color: limegreen; font-weight: bold; }
+        .loser { color: red; font-weight: bold; }
+        .neutral { color: #aaa; font-weight: bold; }
+        .stat-label { font-weight: bold; }
     </style>
 </head>
 <body>
@@ -20,18 +49,57 @@
         <h2 style="text-align:center;margin-bottom:32px;">Duel détaillé</h2>
         <div class="duel-flex">
             <div class="duel-player">
-                <img src="{{ player1.headshot }}" alt="Headshot">
-                <div class="name">{{ player1.name }}</div>
+                <img class="headshot" src="{{ player1.headshot }}" alt="Headshot">
+                <div class="name">
+                    {% if player1.teamLogo %}
+                        <img src="{{ player1.teamLogo }}" alt="Logo" style="height:22px;vertical-align:middle;margin-right:6px;">
+                    {% endif %}
+                    #{{ player1.sweaterNumber }} {{ player1.name }}
+                </div>
                 <div class="elo">ELO : {{ player1.elo|round|int }}</div>
             </div>
             <div class="vs">VS</div>
             <div class="duel-player">
-                <img src="{{ player2.headshot }}" alt="Headshot">
-                <div class="name">{{ player2.name }}</div>
+                <img src="{{ player2.headshot }}" alt="Headshot" class="headshot">
+                <div class="name">
+                    {% if player2.teamLogo %}
+                        <img src="{{ player2.teamLogo }}" alt="Logo" style="height:22px;vertical-align:middle;margin-right:6px;">
+                    {% endif %}
+                    #{{ player2.sweaterNumber }} {{ player2.name }}
+                </div>
                 <div class="elo">ELO : {{ player2.elo|round|int }}</div>
             </div>
         </div>
-        <!-- Tu peux ajouter ici un tableau comparatif de stats si tu veux -->
+        <table>
+            <tr>
+                <th>{{ player1.name }}</th>
+                <th>Stat</th>
+                <th>{{ player2.name }}</th>
+            </tr>
+            {% for stat in comparison %}
+                <tr>
+                    <td class="{% if stat.winner==1 %}winner{% elif stat.winner==2 %}loser{% else %}neutral{% endif %}">
+                        {{ stat.p1 }}
+                    </td>
+                    <td class="stat-label">{{ stat.label }}</td>
+                    <td class="{% if stat.winner==2 %}winner{% elif stat.winner==1 %}loser{% else %}neutral{% endif %}">
+                        {{ stat.p2 }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        <div style="text-align:center;margin-top:24px;font-size:1.3em;">
+            Score : <span style="color:limegreen;font-weight:bold;">{{ p1_score }}</span>
+            -
+            <span style="color:limegreen;font-weight:bold;">{{ p2_score }}</span>
+            {% if duel_winner == 1 %}
+                <span style="color:limegreen;">🏆 {{ player1.name }} gagne !</span>
+            {% elif duel_winner == 2 %}
+                <span style="color:limegreen;">🏆 {{ player2.name }} gagne !</span>
+            {% else %}
+                <span style="color:gold;">Égalité !</span>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>
