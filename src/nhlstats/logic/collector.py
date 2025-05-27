@@ -112,8 +112,11 @@ def player_stats(player_id, season_id):
         "assists": stats.get("assists", 0),
         "points": stats.get("points", 0),
         "plusMinus": stats.get("plusMinus", 0),
-        "headshot": data.get("headshot", ""),  # <-- bien ici
-        "heroImage": data.get("heroImage", "") # <-- bien ici
+        "sweaterNumber": data.get("sweaterNumber", ""),
+        "birthDate": data.get("birthDate", ""),
+        "headshot": data.get("headshot", ""),
+        "heroImage": data.get("heroImage", ""),
+        "teamLogo": data.get("teamLogo", "")
     }
 
 
