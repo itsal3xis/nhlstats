@@ -89,10 +89,12 @@ def team_players(abbr, season_id):
             player_info = {
                 "name": f"{player['firstName']['default']} {player['lastName']['default']}",
                 "id": player["id"],
-                "position": player.get("positionCode", group[:-1].capitalize()),  # fallback to group name
+                "position": player.get("positionCode", group[:-1].capitalize()),
                 "height": player.get("heightInCentimeters"),
                 "weight": player.get("weightInKilograms"),
-                "birthDate": player.get("birthDate")
+                "birthDate": player.get("birthDate"),
+                "headshot": player.get("headshot"),
+                "heroImage": player.get("heroImage")  # <-- Correction ici
             }
             informations.append(player_info)
     return informations
@@ -103,16 +105,15 @@ def player_stats(player_id, season_id):
     if response.status_code != 200:
         return None
     data = response.json()
-    # Try to extract stats (adjust keys as needed based on API response)
     stats = data.get("featuredStats", {}).get("regularSeason", {}).get("subSeason", {})
-    if not stats:
-        return None
     return {
         "gamesPlayed": stats.get("gamesPlayed", 0),
         "goals": stats.get("goals", 0),
         "assists": stats.get("assists", 0),
         "points": stats.get("points", 0),
-        "plusMinus": stats.get("plusMinus", 0)
+        "plusMinus": stats.get("plusMinus", 0),
+        "headshot": data.get("headshot", ""),  # <-- bien ici
+        "heroImage": data.get("heroImage", "") # <-- bien ici
     }
 
 
@@ -132,13 +133,18 @@ def collect_all_player_stats(season_id):
         print(f"  Found {len(players)} players")
         for player in players:
             stats = player_stats(player["id"], season_id)
+            # On récupère headshot et heroImage depuis player ou stats
+            headshot = stats.get("headshot") or player.get("headshot") or ""
+            hero_image = stats.get("heroImage") or player.get("heroImage") or ""
             if stats:
                 player_info = {
                     "id": player["id"],
                     "name": player["name"],
                     "team": abbr,
-                    "position": player.get("position"),  # <-- Add position here
-                    **stats
+                    "position": player.get("position"),
+                    **stats,
+                    "headshot": headshot,
+                    "heroImage": hero_image  # Un seul champ, cohérent partout
                 }
                 all_players.append(player_info)
             else:
@@ -155,6 +161,7 @@ def collector():
     # Use the current season id, e.g. "20242025"
     collect_all_player_stats("20242025")
 
+#collector()
 
 
 
