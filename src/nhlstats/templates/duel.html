@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Detailed Duel</title>
+    <title>Detailed Comparaison</title>
     <style>
         body { background: #181c24; color: #f5f6fa; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin: 0; }
         .duel-container { max-width: 800px; margin: 40px auto; background: #232a36; border-radius: 16px; box-shadow: 0 4px 24px #000a; padding: 32px 24px; }
@@ -46,7 +46,7 @@
 <body>
     <div class="duel-container">
         <a href="{{ url_for('detailed_player_info', player_id=player1.id) }}" style="color:#4fc3f7;">&larr; Back</a>
-        <h2 style="text-align:center;margin-bottom:32px;">Detailed Duel</h2>
+        <h2 style="text-align:center;margin-bottom:32px;">Detailed Comparaison</h2>
         <div class="duel-flex">
             <div class="duel-player">
                 <img class="headshot" src="{{ player1.headshot }}" alt="Headshot">

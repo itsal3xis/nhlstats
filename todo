@@ -2,5 +2,7 @@
 |
 ├── add more stats and analyse them (win%, hits)
 |
-├── ELO v2 with the complete stats
+├── Duel add contracts info like age, salary, years_left, etc...
+|
+├── ELO v2 with the complete stats taking account of the team stats(ex +/- less important in bad teams)
 
