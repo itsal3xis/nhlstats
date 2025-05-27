@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NHL Stats Viewer</title>
+    <style>
+        body {
+            background: #181c24;
+            color: #f5f6fa;
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 480px;
+            margin: 40px auto;
+            background: #232a36;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px #000a  ;
+            padding: 32px 24px 24px 24px;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        form {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            background: #2e3644;
+            color: #f5f6fa;
+        }
+        button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            background: #4fc3f7;
+            color: #181c24;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #039be5;
+            color: #fff;
+        }
+        .player-card {
+            background: #1b222c;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px #0004;
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 12px;
+        }
+        .player-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #232a36;
+            margin-bottom: 16px;
+            border: 3px solid #4fc3f7;
+        }
+        .player-info {
+            width: 100%;
+        }
+        .player-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .player-info li {
+            margin: 8px 0;
+            font-size: 1.08rem;
+            border-bottom: 1px solid #232a36;
+            padding-bottom: 4px;
+        }
+        .stat-label {
+            color: #4fc3f7;
+            font-weight: 600;
+        }
+        .not-found {
+            text-align: center;
+            color: #ff7675;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Player Search</h1>
+        <form method="post">
+            <input type="text" name="player_name" placeholder="Player Name" required>
+            <button type="submit">Search</button>
+        </form>
+        {% if player %}
+            <div class="player-card" style="display:flex;align-items:center;gap:18px;">
+                {% if player.headshot %}
+                    <img src="{{ player.headshot }}" alt="Headshot"
+                         style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #4fc3f7;background:#232a36;">
+                {% endif %}
+                <div class="player-info" style="flex:1;">
+                    <ul>
+                        <li><span class="stat-label">Name :</span> {{ player.name }}</li>
+                        <li><span class="stat-label">Team :</span> {{ player.team }}</li>
+                        <li><span class="stat-label">Position :</span> {{ player.position }}</li>
+                        <li><span class="stat-label">ELO :</span> {{ player.elo|round|int }}</li>
+                    </ul>
+                    <div style="margin-top:18px;">
+                        <a href="{{ url_for('detailed_player_info', player_id=player.id) }}">
+                            <button style="padding:8px 18px;border-radius:8px;background:#039be5;color:#fff;font-weight:700;border:none;cursor:pointer;">
+                                Détails complets
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% elif request.method == 'POST' %}
+            <div class="not-found">No player found.</div>
+        {% endif %}
+    </div>
+    <script>
+const input = document.querySelector('input[name="player_name"]');
+const container = document.createElement('div');
+container.style.position = 'relative';
+input.parentNode.insertBefore(container, input);
+container.appendChild(input);
+
+const suggestions = document.createElement('div');
+suggestions.style.position = 'absolute';
+suggestions.style.top = '110%';
+suggestions.style.left = '0';
+suggestions.style.right = '0';
+suggestions.style.background = '#232a36';
+suggestions.style.borderRadius = '10px';
+suggestions.style.boxShadow = '0 2px 8px #0007';
+suggestions.style.zIndex = '10';
+suggestions.style.display = 'none';
+container.appendChild(suggestions);
+
+input.addEventListener('input', function() {
+    const q = input.value.trim();
+    if (q.length < 2) {
+        suggestions.style.display = 'none';
+        return;
+    }
+    fetch('/autocomplete?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => {
+            suggestions.innerHTML = '';
+            if (data.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            data.forEach(player => {
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.gap = '12px';
+                div.style.padding = '8px 12px';
+                div.style.cursor = 'pointer';
+                div.onmouseover = () => div.style.background = '#2e3644';
+                div.onmouseout = () => div.style.background = '';
+                div.onclick = () => {
+                    input.value = player.name;
+                    suggestions.style.display = 'none';
+                };
+                if (player.headshot) {
+                    const img = document.createElement('img');
+                    img.src = player.headshot;
+                    img.alt = 'Headshot';
+                    img.style.width = '36px';
+                    img.style.height = '36px';
+                    img.style.borderRadius = '50%';
+                    img.style.objectFit = 'cover';
+                    img.style.border = '2px solid #4fc3f7';
+                    div.appendChild(img);
+                }
+                const span = document.createElement('span');
+                span.textContent = player.name;
+                span.style.color = '#fff';
+                span.style.fontWeight = '600';
+                div.appendChild(span);
+                suggestions.appendChild(div);
+            });
+            suggestions.style.display = 'block';
+        });
+});
+
+document.addEventListener('click', function(e) {
+    if (!container.contains(e.target)) {
+        suggestions.style.display = 'none';
+    }
+});
+</script>
+</body>
+</html>
