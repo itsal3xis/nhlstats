@@ -40,7 +40,7 @@ def detailed_player_info(player_id):
         elos = json.load(f)
     player = next((s for s in stats if s['id'] == player_id), None)
     if not player:
-        return "Joueur introuvable", 404
+        return "No player", 404
 
     player_elo_info = elos.get(str(player_id))
     if player_elo_info and 'elo' in player_elo_info:
@@ -52,10 +52,10 @@ def detailed_player_info(player_id):
     compare_by = request.form.get('compare_by', 'position')
     if compare_by == 'position':
         group_all = [v for v in elos.values() if v.get('position') == player.get('position')]
-        title = f"ELO des {player.get('position', '')} NHL"
+        title = f"ELO of {player.get('position', '')} NHL"
     else:
         group_all = [v for v in elos.values() if v.get('team') == player.get('team')]
-        title = f"ELO des joueurs de {player.get('team', '')}"
+        title = f"ELO of players on {player.get('team', '')}"
 
     # Trie tout le groupe par ELO décroissant
     group_all = sorted(group_all, key=lambda x: x['elo'], reverse=True)
@@ -182,11 +182,11 @@ def detailed_duel(player1_id, player2_id):
     # Stat comparison logic (as before)
     stat_keys = ["goals", "assists", "points", "plusMinus"]
     stat_labels = {
-        "goals": "Buts",
-        "assists": "Aides",
+        "goals": "Goals",
+        "assists": "Assists",
         "points": "Points",
         "plusMinus": "+/-",
-        "gamesPlayed": "Matchs",
+        "gamesPlayed": "Games Played",
         "elo": "ELO"
     }
     comparison = []
