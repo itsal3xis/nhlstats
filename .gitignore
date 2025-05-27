@@ -175,4 +175,4 @@ cython_debug/
 
 
 # Stats files 
-/src/logic/statistics/*
+src/nhlstats/logic/statistics/*.json
