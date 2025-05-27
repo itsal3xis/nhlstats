@@ -1,6 +1,5 @@
 import json
 import os
-import collector as collector
 import matplotlib.pyplot as plt
 
 # Find the statistics directory relative to this script
@@ -58,9 +57,9 @@ def player_elo():
         )
         elos[player["id"]] = {
             "name": player["name"],
-            "team": player["team"],
+            "team": player.get("team"),
             "position": player.get("position"),
-            "elo": round(elo, 1)
+            "elo": elo
         }
 
     # Save to playerelo.json
@@ -117,11 +116,25 @@ def plot_top_players(n=20, position=None, team=None):
     elos = [p["elo"] for p in top_players]
 
     plt.figure(figsize=(12, 6))
-    plt.barh(names[::-1], elos[::-1], color="skyblue")
+    bars = plt.barh(names[::-1], elos[::-1], color="skyblue")
     plt.xlabel("ELO")
     plt.title(f"Top {n} NHL Players by ELO"
               + (f" | Position: {position.upper()}" if position else "")
               + (f" | Team: {team.upper()}" if team else ""))
+
+    # Ajouter la valeur ELO à l'intérieur de chaque barre
+    for bar, elo in zip(bars, elos[::-1]):
+        plt.text(
+            bar.get_width() - 10,  # Légèrement à gauche du bord droit de la barre
+            bar.get_y() + bar.get_height() / 2,
+            f"{elo:.1f}",
+            va='center',
+            ha='right',
+            color='white',
+            fontsize=10,
+            fontweight='bold'
+        )
+
     plt.tight_layout()
     plt.show()
 
@@ -130,7 +143,7 @@ def plot_top_players(n=20, position=None, team=None):
 #plot_top_players(10, position="D")  # Top 10 defensemen
 #plot_top_players(15, team="BOS")  # Top 15 players from Boston
 #plot_top_players(5, position="C", team="EDM")  # Top 5 centers from Edmonton
-#plot_top_players(5, position="R", team="MTL")  # Top 5 centers from Montreal
+#plot_top_players(5, team='MTL')  # Top 5 centers from Montreal
 
 # Example usage:
 """
@@ -140,5 +153,5 @@ for abbr, elo in sorted(elos.items(), key=lambda x: x[1], reverse=True):
 """
 
 # Example usage:
-#player_elo()
+player_elo()
 
