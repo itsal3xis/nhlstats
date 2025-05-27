@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Détails joueur NHL</title>
+    <title>Player Details</title>
     <style>
 body { background: #181c24; color: #f5f6fa; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin: 0; }
 .container { max-width: 1200px; margin: 40px auto; background: #232a36; border-radius: 16px; box-shadow: 0 4px 24px #000a; padding: 32px 24px 24px 24px; }
@@ -54,7 +54,7 @@ th { color: #4fc3f7; font-weight: 600; }
 </head>
 <body>
     <div class="container">
-        <a href="{{ url_for('index') }}" class="back-link">&larr; Retour</a>
+        <a href="{{ url_for('index') }}" class="back-link">&larr; Back</a>
         <div class="main-flex">
             <!-- Colonne stats -->
             <div class="left-col">
@@ -106,7 +106,7 @@ th { color: #4fc3f7; font-weight: 600; }
                     <button type="submit" style="padding:6px 18px;border-radius:8px;background:#039be5;color:#fff;font-weight:700;border:none;cursor:pointer;">Compare</button>
                 </form>
                 {% if elo_graph %}
-                    <img src="{{ elo_graph }}" alt="Comparaison ELO" class="elo-graph">
+                    <img src="{{ elo_graph }}" alt="ELO Comparaison" class="elo-graph">
                 {% endif %}
                 {% if similar_player %}
                     <div style="margin:36px 0 0 0;display:flex;align-items:center;justify-content:center;gap:32px;">
@@ -125,7 +125,7 @@ th { color: #4fc3f7; font-weight: 600; }
                         </div>
                     </div>
                     <div style="text-align:center;color:#aaa;margin-top:10px;font-size:0.98em;">
-                        Duel avec le joueur le plus proche en ELO (même position)
+                        Player ELO Duel between players in the same position or team.
                     </div>
                     <div style="text-align:center;margin-top:18px;">
                         <a href="{{ url_for('detailed_duel', player1_id=player.id, player2_id=similar_player.id) }}">
@@ -136,7 +136,7 @@ th { color: #4fc3f7; font-weight: 600; }
                     </div>
                 {% else %}
                     <div style="text-align:center;color:#aaa;margin-top:36px;font-size:1.05em;">
-                        Aucun autre joueur de même position trouvé pour le duel.
+                        No players found for the duel.
                     </div>
                 {% endif %}
             </div>
