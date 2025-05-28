@@ -374,6 +374,15 @@ def get_trending_players(stats, elos, prev_elos, top_n=3):
     trending.sort(key=lambda x: abs(x['elo_change']), reverse=True)
     return trending[:top_n]
 
+@app.route('/player/<int:player_id>/full_stats')
+def full_player_stats(player_id):
+    with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
+        stats = json.load(f)
+    player = next((s for s in stats if s['id'] == player_id), None)
+    if not player:
+        return "No player", 404
+    return render_template('full_player_stats.html', player=player)
+
 if __name__ == '__main__':
     # Ensure statistics directory exists
     if not os.path.exists(STATISTICS_DIR):
