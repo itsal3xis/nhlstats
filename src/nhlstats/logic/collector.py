@@ -34,6 +34,7 @@ def stats():
                 "OtWins": record['otLosses'],
                 "goalDifferential": record['goalDifferential'],
                 "goalAgainst": record['goalAgainst'],
+                "teamLogo": record['teamLogo'],
             }
             equipes_stats.append(equipe_info)
         
@@ -366,6 +367,6 @@ def collector():
 
 
 
-
+stats()
 
 

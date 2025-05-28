@@ -4,35 +4,336 @@
     <meta charset="UTF-8">
     <title>All Stats - {{ player.name }}</title>
     <style>
-        body { background: #181c24; color: #f5f6fa; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin: 0; }
-        .container { max-width: 900px; margin: 40px auto; background: #232a36; border-radius: 16px; box-shadow: 0 4px 24px #000a; padding: 32px 24px 24px 24px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-        th, td { padding: 8px 6px; border-bottom: 1px solid #232a36; text-align: left; }
-        th { color: #4fc3f7; font-weight: 600; }
-        tr:last-child td { border-bottom: none; }
+        body {
+            background: #181c24;
+            color: #f5f6fa;
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            background: #232a36;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px #000a;
+            padding: 32px 24px 24px 24px;
+        }
+        .main-flex {
+            display: flex;
+            background: #212633;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #000a;
+            overflow: hidden;
+            position: relative;
+        }
+        .left-col {
+            flex: 2 1 400px;
+            min-width: 320px;
+            padding: 32px 32px 32px 32px;
+            background: #232a36;
+            border-top-left-radius: 18px;
+            border-bottom-left-radius: 18px;
+            border-right: 2px solid #2e3644;
+        }
+        .right-col {
+            flex: 1 1 340px;
+            min-width: 280px;
+            padding: 32px 32px 32px 32px;
+            background: #232a36;
+            border-top-right-radius: 18px;
+            border-bottom-right-radius: 18px;
+            position: relative;
+        }
+        .header-flex {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .player-headshot {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #4fc3f7;
+            background: #232a36;
+            box-shadow: 0 2px 8px #0007;
+        }
+        .player-info {
+            flex: 1;
+        }
+        .player-info h1 {
+            margin: 0 0 8px 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4fc3f7;
+        }
+        .player-info .subtitle {
+            color: #aaa;
+            font-size: 1.1em;
+            margin-bottom: 6px;
+        }
+        .stats-section-title {
+            color: #4fc3f7;
+            font-size: 1.15em;
+            font-weight: 700;
+            margin: 32px 0 12px 0;
+            letter-spacing: 0.03em;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px 24px;
+            margin-bottom: 18px;
+            width: 100%;
+        }
+        .stat-card {
+            background: #1b222c;
+            border-radius: 10px;
+            padding: 14px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            box-shadow: 0 2px 8px #0003;
+            min-width: 0;
+        }
+        .stat-label {
+            color: #aaa;
+            font-weight: 600;
+            font-size: 1em;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            color: #ffe066;
+            font-size: 1.25em;
+            font-weight: 700;
+            word-break: break-all;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 18px;
+            color: #4fc3f7;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.08em;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #039be5;
+            text-decoration: underline;
+        }
+        /* Right column: last games */
+        .games-section-title {
+            color: #4fc3f7;
+            font-size: 1.12em;
+            font-weight: 700;
+            margin: 0 0 14px 0;
+            letter-spacing: 0.02em;
+        }
+        .game-card {
+            background: #1b222c;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0003;
+            padding: 14px 14px 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .game-opponent-logo {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #232a36;
+            border: 2px solid #4fc3f7;
+            object-fit: contain;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .game-opponent {
+            color: #4fc3f7;
+            font-size: 1.08em;
+            font-weight: 600;
+        }
+        .game-date {
+            color: #aaa;
+            font-size: 0.98em;
+            font-weight: 600;
+        }
+        .game-stats {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            font-size: 1em;
+        }
+        .game-stat {
+            color: #ffe066;
+            font-weight: 600;
+        }
+        @media (max-width: 900px) {
+            .main-flex { flex-direction: column; }
+            .left-col, .right-col {
+                border-radius: 0 !important;
+                padding: 24px 10px;
+                border-right: none !important;
+            }
+            .left-col { border-bottom: 2px solid #232a36; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Toutes les stats de {{ player.name }}</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>Stat</th>
-                    <th>Valeur</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for key, value in player.items() %}
-                    <tr>
-                        <td>{{ key }}</td>
-                        <td>{{ value }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <a href="{{ url_for('detailed_player_info', player_id=player.id) }}" class="back-link">&#8592; Retour à la fiche joueur</a>
+        <div class="header-flex">
+            {% if player.headshot %}
+                <img src="{{ player.headshot }}" alt="Headshot" class="player-headshot">
+            {% endif %}
+            <div class="player-info">
+                <h1>{{ player.name }}</h1>
+                <div class="subtitle">
+                    {% if player.team %}{{ player.team }}{% endif %}
+                    {% if player.position %} | {{ player.position }}{% endif %}
+                    {% if player.sweaterNumber %} | #{{ player.sweaterNumber }}{% endif %}
+                </div>
+                {% if player.elo %}
+                    <div style="color:#ffe066;font-size:1.1em;font-weight:600;">
+                        ELO: {{ player.elo|round(2) }}
+                        {% if player.elo_change is defined and player.elo_change != 0 %}
+                            <span style="color:{{ '#44e37b' if player.elo_change > 0 else '#ff7675' }};margin-left:8px;">
+                                {% if player.elo_change > 0 %}+{% elif player.elo_change < 0 %}-{% endif %}{{ player.elo_change|abs|round(2) }}
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="main-flex">
+            <!-- LEFT COLUMN: Career Stats -->
+            <div class="left-col">
+                <div style="margin-bottom:18px;">
+                    <label for="stats_period" style="color:#4fc3f7;font-weight:600;margin-right:4px;font-size:1em;">Stats period:</label>
+                    <select id="stats_period" style="padding:6px 12px;border-radius:8px;background:#232a36;color:#fff;border:none;">
+                        <option value="regular">Regular Season</option>
+                        <option value="career">Career (Regular Season)</option>
+                        <option value="playoffs">Playoffs</option>
+                        <option value="career_playoffs">Career (Playoffs)</option>
+                    </select>
+                </div>
+
+                <div class="stats-grid player-stats-list">
+                    <!-- Regular Season -->
+                    <div class="stat-card period-regular"><div class="stat-label">Games Played</div><div class="stat-value">{{ player.gamesPlayed }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">Goals</div><div class="stat-value">{{ player.goals }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">Assists</div><div class="stat-value">{{ player.assists }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">Points</div><div class="stat-value">{{ player.points }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">Plus/Minus</div><div class="stat-value">{{ player.plusMinus }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">Shots</div><div class="stat-value">{{ player.shots }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">PIM</div><div class="stat-value">{{ player.pim }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">PP Goals</div><div class="stat-value">{{ player.powerPlayGoals }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">SH Goals</div><div class="stat-value">{{ player.shorthandedGoals }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">GWG</div><div class="stat-value">{{ player.gameWinningGoals }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">OT Goals</div><div class="stat-value">{{ player.otGoals }}</div></div>
+                    <div class="stat-card period-regular"><div class="stat-label">Shooting %</div><div class="stat-value">{{ player.shootingPctg }}</div></div>
+
+                    <!-- Career Regular Season -->
+                    <div class="stat-card period-career"><div class="stat-label">Games Played</div><div class="stat-value">{{ player.careerGamesPlayed }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">Goals</div><div class="stat-value">{{ player.careerGoals }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">Assists</div><div class="stat-value">{{ player.careerAssists }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">Points</div><div class="stat-value">{{ player.careerPoints }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">Plus/Minus</div><div class="stat-value">{{ player.careerPlusMinus }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">Shots</div><div class="stat-value">{{ player.careerShots }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">PIM</div><div class="stat-value">{{ player.careerPim }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">PP Goals</div><div class="stat-value">{{ player.careerPowerPlayGoals }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">SH Goals</div><div class="stat-value">{{ player.careerShorthandedGoals }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">GWG</div><div class="stat-value">{{ player.careerGameWinningGoals }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">OT Goals</div><div class="stat-value">{{ player.careerOtGoals }}</div></div>
+                    <div class="stat-card period-career"><div class="stat-label">Shooting %</div><div class="stat-value">{{ player.careerShootingPctg }}</div></div>
+
+                    <!-- Playoffs -->
+                    <div class="stat-card period-playoffs"><div class="stat-label">Games Played</div><div class="stat-value">{{ player.playoffGamesPlayed }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">Goals</div><div class="stat-value">{{ player.playoffGoals }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">Assists</div><div class="stat-value">{{ player.playoffAssists }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">Points</div><div class="stat-value">{{ player.playoffPoints }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">Plus/Minus</div><div class="stat-value">{{ player.playoffPlusMinus }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">Shots</div><div class="stat-value">{{ player.playoffShots }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">PIM</div><div class="stat-value">{{ player.playoffPim }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">PP Goals</div><div class="stat-value">{{ player.playoffPowerPlayGoals }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">SH Goals</div><div class="stat-value">{{ player.playoffShorthandedGoals }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">GWG</div><div class="stat-value">{{ player.playoffGameWinningGoals }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">OT Goals</div><div class="stat-value">{{ player.playoffOtGoals }}</div></div>
+                    <div class="stat-card period-playoffs"><div class="stat-label">Shooting %</div><div class="stat-value">{{ player.playoffShootingPctg }}</div></div>
+
+                    <!-- Career Playoffs -->
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">Games Played</div><div class="stat-value">{{ player.careerPlayoffGamesPlayed }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">Goals</div><div class="stat-value">{{ player.careerPlayoffGoals }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">Assists</div><div class="stat-value">{{ player.careerPlayoffAssists }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">Points</div><div class="stat-value">{{ player.careerPlayoffPoints }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">Plus/Minus</div><div class="stat-value">{{ player.careerPlayoffPlusMinus }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">Shots</div><div class="stat-value">{{ player.careerPlayoffShots }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">PIM</div><div class="stat-value">{{ player.careerPlayoffPim }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">PP Goals</div><div class="stat-value">{{ player.careerPlayoffPowerPlayGoals }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">SH Goals</div><div class="stat-value">{{ player.careerPlayoffShorthandedGoals }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">GWG</div><div class="stat-value">{{ player.careerPlayoffGameWinningGoals }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">OT Goals</div><div class="stat-value">{{ player.careerPlayoffOtGoals }}</div></div>
+                    <div class="stat-card period-career_playoffs"><div class="stat-label">Shooting %</div><div class="stat-value">{{ player.careerPlayoffShootingPctg }}</div></div>
+                </div>
+
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const select = document.getElementById('stats_period');
+                    const allStats = document.querySelectorAll('.player-stats-list .stat-card');
+                    function updateStats() {
+                        const val = select.value;
+                        allStats.forEach(card => {
+                            card.style.display = card.classList.contains('period-' + val) ? '' : 'none';
+                        });
+                    }
+                    select.addEventListener('change', updateStats);
+                    updateStats(); // Show default period on load
+                });
+                </script>
+            </div>
+            <!-- RIGHT COLUMN: Last 5 Games -->
+            <div class="right-col">
+                <div class="games-section-title">Last 5 Games</div>
+                {% if last_five_games %}
+                    {% for game in last_five_games %}
+                        <div class="game-card">
+                            <div class="game-header">
+                                {% if game.opponent_logo %}
+                                    <img src="{{ game.opponent_logo }}" alt="{{ game.opponent }} logo" class="game-opponent-logo">
+                                {% endif %}
+                                <span class="game-opponent">vs {{ game.opponent }}</span>
+                                <span class="game-date" style="margin-left:auto;">{{ game.date }}</span>
+                            </div>
+                            <div class="game-stats">
+                                <span class="game-stat">G: {{ game.goals }}</span>
+                                <span class="game-stat">A: {{ game.assists }}</span>
+                                <span class="game-stat">P: {{ game.points }}</span>
+                                {% if game.plus_minus is defined %}
+                                    <span class="game-stat">+/-: {{ game.plus_minus }}</span>
+                                {% endif %}
+                                {% if game.sog is defined %}
+                                    <span class="game-stat">SOG: {{ game.sog }}</span>
+                                {% endif %}
+                                {% if game.toi is defined %}
+                                    <span class="game-stat">TOI: {{ game.toi }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="color:#aaa;">No recent games available.</div>
+                {% endif %}
+            </div>
+        </div>
         <div style="margin-top:24px;">
-            <a href="{{ url_for('detailed_player_info', player_id=player.id) }}" style="color:#4fc3f7;">&#8592; Retour à la fiche joueur</a>
+            <a href="{{ url_for('detailed_player_info', player_id=player.id) }}" class="back-link">&#8592; Retour à la fiche joueur</a>
         </div>
     </div>
 </body>

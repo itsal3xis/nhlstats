@@ -376,12 +376,36 @@ def get_trending_players(stats, elos, prev_elos, top_n=3):
 
 @app.route('/player/<int:player_id>/full_stats')
 def full_player_stats(player_id):
+    import os, json
     with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
         stats = json.load(f)
     player = next((s for s in stats if s['id'] == player_id), None)
     if not player:
         return "No player", 404
-    return render_template('full_player_stats.html', player=player)
+    last_five_games = player.get("last5Games", [])
+
+    # Load team logos from teamsStats.json
+    with open(os.path.join(STATISTICS_DIR, "teamsStats.json"), "r", encoding="utf-8") as f:
+        teams_stats = json.load(f)
+    abbr_to_logo = {team["abrev"]: team["teamLogo"] for team in teams_stats if "abrev" in team and "teamLogo" in team}
+
+    # Map camelCase to template-friendly keys
+    games = []
+    for game in last_five_games:
+        abbr = game.get("opponentAbbrev", "").upper()
+        games.append({
+            "opponent": abbr,
+            "opponent_logo": abbr_to_logo.get(abbr, ""),
+            "date": game.get("gameDate", ""),
+            "goals": game.get("goals", 0),
+            "assists": game.get("assists", 0),
+            "points": game.get("points", 0),
+            "plus_minus": game.get("plusMinus", 0),
+            "sog": game.get("shots", 0),
+            "toi": game.get("toi", ""),
+        })
+
+    return render_template('full_player_stats.html', player=player, last_five_games=games)
 
 if __name__ == '__main__':
     # Ensure statistics directory exists
