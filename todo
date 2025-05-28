@@ -1,10 +1,7 @@
-├── get goalie statistics for detailed, duels, elo
-|
-├── add more stats and analyse them (win%, hits)
-|
+
 ├── Duel add contracts info like age, salary, years_left, etc...
 |
 ├── ELO v2 with the complete stats taking account of the team stats(ex +/- less important in bad teams)
 
-playoff stats 
+all the major trophies
 
