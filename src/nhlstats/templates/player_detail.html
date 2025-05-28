@@ -100,29 +100,79 @@ th { color: #4fc3f7; font-weight: 600; }
             <option value="playoffs">Playoffs</option>
             <option value="career_playoffs">Career (Playoffs)</option>
         </select>
+        <div style="margin-top:8px;">
+            <a href="{{ url_for('full_player_stats', player_id=player.id) }}" target="_blank">
+                <button style="padding:7px 18px;border-radius:8px;background:#4fc3f7;color:#181c24;font-weight:700;border:none;cursor:pointer;">
+                    Voir toutes les stats
+                </button>
+            </a>
+        </div>
     </div>
 </div>
                 {% endif %}
                 <ul class="player-stats-list">
-                    {% for key, value in player.items() %}
-                        {% if key not in ['id', 'name', 'heroImage', 'headshot', 'elo', 'teamLogo', 'sweaterNumber'] %}
-                            {% set period = '' %}
-                            {% if key.startswith('careerPlayoff') %}
-                                {% set period = 'career_playoffs' %}
-                            {% elif key.startswith('playoff') %}
-                                {% set period = 'playoffs' %}
-                            {% elif key.startswith('career') %}
-                                {% set period = 'career' %}
-                            {% else %}
-                                {% set period = 'regular' %}
-                            {% endif %}
-                            <li class="stat-item period-{{ period }}">
-                                <span class="stat-key">{{ key|replace('_', ' ')|capitalize }}</span>
-                                <span class="stat-value">{{ value }}</span>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
+                    <!-- Regular Season -->
+                    <li class="stat-item period-regular"><span class="stat-key">Position</span><span class="stat-value">{{ player.position }}</span></li>
+                    <li class="stat-item period-regular"><span class="stat-key">Games Played</span><span class="stat-value">{{ player.gamesPlayed }}</span></li>
+                    <li class="stat-item period-regular"><span class="stat-key">Goals</span><span class="stat-value">{{ player.goals }}</span></li>
+                    <li class="stat-item period-regular"><span class="stat-key">Assists</span><span class="stat-value">{{ player.assists }}</span></li>
+                    <li class="stat-item period-regular"><span class="stat-key">Points</span><span class="stat-value">{{ player.points }}</span></li>
+
+                    <!-- Career Regular Season -->
+                    <li class="stat-item period-career"><span class="stat-key">Position</span><span class="stat-value">{{ player.position }}</span></li>
+                    <li class="stat-item period-career"><span class="stat-key">Games Played</span><span class="stat-value">{{ player.careerGamesPlayed }}</span></li>
+                    <li class="stat-item period-career"><span class="stat-key">Goals</span><span class="stat-value">{{ player.careerGoals }}</span></li>
+                    <li class="stat-item period-career"><span class="stat-key">Assists</span><span class="stat-value">{{ player.careerAssists }}</span></li>
+                    <li class="stat-item period-career"><span class="stat-key">Points</span><span class="stat-value">{{ player.careerPoints }}</span></li>
+
+                    <!-- Playoffs -->
+                    <li class="stat-item period-playoffs"><span class="stat-key">Position</span><span class="stat-value">{{ player.position }}</span></li>
+                    <li class="stat-item period-playoffs"><span class="stat-key">Games Played</span><span class="stat-value">{{ player.playoffGamesPlayed }}</span></li>
+                    <li class="stat-item period-playoffs"><span class="stat-key">Goals</span><span class="stat-value">{{ player.playoffGoals }}</span></li>
+                    <li class="stat-item period-playoffs"><span class="stat-key">Assists</span><span class="stat-value">{{ player.playoffAssists }}</span></li>
+                    <li class="stat-item period-playoffs"><span class="stat-key">Points</span><span class="stat-value">{{ player.playoffPoints }}</span></li>
+
+                    <!-- Career Playoffs -->
+                    <li class="stat-item period-career_playoffs"><span class="stat-key">Position</span><span class="stat-value">{{ player.position }}</span></li>
+                    <li class="stat-item period-career_playoffs"><span class="stat-key">Games Played</span><span class="stat-value">{{ player.careerPlayoffGamesPlayed }}</span></li>
+                    <li class="stat-item period-career_playoffs"><span class="stat-key">Goals</span><span class="stat-value">{{ player.careerPlayoffGoals }}</span></li>
+                    <li class="stat-item period-career_playoffs"><span class="stat-key">Assists</span><span class="stat-value">{{ player.careerPlayoffAssists }}</span></li>
+                    <li class="stat-item period-career_playoffs"><span class="stat-key">Points</span><span class="stat-value">{{ player.careerPlayoffPoints }}</span></li>
                 </ul>
+                {% if player.awards %}
+<div class="player-awards" style="margin-top:18px;">
+    <span style="color:#4fc3f7;font-weight:600;font-size:1.08em;display:inline-block;margin-bottom:14px;">Awards&nbsp;:</span>
+    {% set ns = namespace(stanley_cups=0, calder=False) %}
+    {% for award in player.awards %}
+        {% if award.trophy|lower == 'stanley cup' %}
+            {% set ns.stanley_cups = ns.stanley_cups + (award.seasons|length if award.seasons else 1) %}
+        {% endif %}
+        {% if award.trophy|lower == 'calder memorial trophy' %}
+            {% set ns.calder = True %}
+        {% endif %}
+    {% endfor %}
+    <div style="display:flex;gap:32px;align-items:flex-end;margin-top:6px;">
+        {% if ns.stanley_cups > 0 %}
+            <div style="display:flex;flex-direction:column;align-items:center;">
+                <img src="{{ url_for('static', filename='img/stanleycup.png') }}" alt="Stanley Cup"
+                     style="height:68px;width:auto;vertical-align:middle;margin-bottom:4px;">
+                <span style="color:#fff;font-size:0.92em;font-weight:500;display:block;text-align:center;width:68px;">
+                    Stanley Cup x{{ ns.stanley_cups }}
+                </span>
+            </div>
+        {% endif %}
+        {% if ns.calder %}
+            <div style="display:flex;flex-direction:column;align-items:center;">
+                <img src="{{ url_for('static', filename='img/calder.png') }}" alt="Calder Trophy"
+                     style="height:68px;width:auto;vertical-align:middle;margin-bottom:4px;">
+                <span style="color:#fff;font-size:0.92em;font-weight:500;display:block;text-align:center;width:68px;">
+                    Calder Trophy
+                </span>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
             </div>
             <!-- Colonne graphique -->
             <div class="right-col">
