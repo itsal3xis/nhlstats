@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Stats - {{ player.name }}</title>
+    <style>
+        body { background: #181c24; color: #f5f6fa; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin: 0; }
+        .container { max-width: 900px; margin: 40px auto; background: #232a36; border-radius: 16px; box-shadow: 0 4px 24px #000a; padding: 32px 24px 24px 24px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+        th, td { padding: 8px 6px; border-bottom: 1px solid #232a36; text-align: left; }
+        th { color: #4fc3f7; font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Toutes les stats de {{ player.name }}</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Stat</th>
+                    <th>Valeur</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in player.items() %}
+                    <tr>
+                        <td>{{ key }}</td>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top:24px;">
+            <a href="{{ url_for('detailed_player_info', player_id=player.id) }}" style="color:#4fc3f7;">&#8592; Retour à la fiche joueur</a>
+        </div>
+    </div>
+</body>
+</html>
