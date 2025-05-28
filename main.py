@@ -16,7 +16,7 @@ def main():
     if args.web:
         src.nhlstats.app.app.run(debug=True, port=5001)
     if args.elo:
-        src.nhlstats.logic.analyst.playerelo()
+        src.nhlstats.logic.analyst.player_elo()
 
 
 if __name__ == "__main__":

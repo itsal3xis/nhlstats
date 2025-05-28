@@ -50,6 +50,11 @@ th { color: #4fc3f7; font-weight: 600; }
     .right-col, .left-col { max-width: 100%; }
     .hero-img { max-height: 180px; }
 }
+
+#stats_period {
+    margin-left: 8px;
+    font-size: 1em;
+}
     </style>
 </head>
 <body>
@@ -75,25 +80,44 @@ th { color: #4fc3f7; font-weight: 600; }
                     #{{ player.sweaterNumber }} {{ player.name }}
                 </h1>
                 {% if player.elo %}
-                    <div class="elo">
-                        ELO : {{ player.elo|round(2) }}
-                        {% if best_in_position %}
-                            <span title="Best ELO at this position">👑</span>
-                        {% endif %}
-                        {% if player.elo_change is defined and player.elo_change != 0 %}
-                            <span style="color:{{ '#44e37b' if player.elo_change > 0 else '#ff7675' }};font-size:1em;">
-                                {% if player.elo_change > 0 %}+{% elif player.elo_change < 0 %}-{% endif %}{{ player.elo_change|abs|round(2) }}
-                            </span>
-                        {% endif %}
-                    </div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+    <div class="elo" style="margin-bottom:0;min-width:90px;font-size:1.1em;">
+        ELO: {{ player.elo|round|int }}
+        {% if best_in_position %}
+            <span title="Best ELO at this position">👑</span>
+        {% endif %}
+        {% if player.elo_change is defined and player.elo_change != 0 %}
+            <span style="color:{{ '#44e37b' if player.elo_change > 0 else '#ff7675' }};font-size:1em;">
+                {% if player.elo_change > 0 %}+{% elif player.elo_change < 0 %}-{% endif %}{{ player.elo_change|abs|round(2) }}
+            </span>
+        {% endif %}
+    </div>
+    <div>
+        <label for="stats_period" style="color:#4fc3f7;font-weight:600;margin-right:4px;font-size:0.98em;">Stats period:</label>
+        <select id="stats_period" style="padding:3px 8px;border-radius:6px;background:#232a36;color:#fff;border:none;font-size:0.98em;min-width:120px;">
+            <option value="regular">Regular Season</option>
+            <option value="career">Career (Regular Season)</option>
+            <option value="playoffs">Playoffs</option>
+            <option value="career_playoffs">Career (Playoffs)</option>
+        </select>
+    </div>
+</div>
                 {% endif %}
                 <ul class="player-stats-list">
                     {% for key, value in player.items() %}
                         {% if key not in ['id', 'name', 'heroImage', 'headshot', 'elo', 'teamLogo', 'sweaterNumber'] %}
-                            <li>
-                                <span class="stat-key">
-                                    {{ key|replace('_', ' ')|capitalize }}
-                                </span>
+                            {% set period = '' %}
+                            {% if key.startswith('careerPlayoff') %}
+                                {% set period = 'career_playoffs' %}
+                            {% elif key.startswith('playoff') %}
+                                {% set period = 'playoffs' %}
+                            {% elif key.startswith('career') %}
+                                {% set period = 'career' %}
+                            {% else %}
+                                {% set period = 'regular' %}
+                            {% endif %}
+                            <li class="stat-item period-{{ period }}">
+                                <span class="stat-key">{{ key|replace('_', ' ')|capitalize }}</span>
                                 <span class="stat-value">{{ value }}</span>
                             </li>
                         {% endif %}
@@ -110,42 +134,58 @@ th { color: #4fc3f7; font-weight: 600; }
                     </select>
                     <button type="submit" style="padding:6px 18px;border-radius:8px;background:#039be5;color:#fff;font-weight:700;border:none;cursor:pointer;">Compare</button>
                 </form>
-                {% if elo_graph %}
-                    <img src="{{ elo_graph }}" alt="ELO Comparaison" class="elo-graph">
-                {% endif %}
-                {% if similar_player %}
-                    <div style="margin:36px 0 0 0;display:flex;align-items:center;justify-content:center;gap:32px;">
-                        <!-- Joueur courant -->
-                        <div style="text-align:center;">
-                            <img src="{{ player.headshot }}" alt="Headshot" style="width:80px;height:80px;border-radius:50%;border:3px solid #4fc3f7;background:#232a36;box-shadow:0 2px 8px #0007;">
-                            <div style="margin-top:8px;font-weight:700;">{{ player.name }}</div>
-                            <div style="color:#4fc3f7;font-size:1.1em;">ELO : {{ player.elo|round|int }}</div>
+                <div style="margin-top:24px;margin-bottom:8px;">
+                    {% if elo_graph %}
+                        <img src="{{ elo_graph }}" alt="ELO Comparaison" class="elo-graph">
+                    {% endif %}
+                    {% if similar_player %}
+                        <div style="margin:36px 0 0 0;display:flex;align-items:center;justify-content:center;gap:32px;">
+                            <!-- Joueur courant -->
+                            <div style="text-align:center;">
+                                <img src="{{ player.headshot }}" alt="Headshot" style="width:80px;height:80px;border-radius:50%;border:3px solid #4fc3f7;background:#232a36;box-shadow:0 2px 8px #0007;">
+                                <div style="margin-top:8px;font-weight:700;">{{ player.name }}</div>
+                                <div style="color:#4fc3f7;font-size:1.1em;">ELO : {{ player.elo|round|int }}</div>
+                            </div>
+                            <div style="font-size:2.2em;font-weight:700;color:#fff;">VS</div>
+                            <!-- Joueur similaire -->
+                            <div style="text-align:center;">
+                                <img src="{{ similar_player.headshot }}" alt="Headshot" style="width:80px;height:80px;border-radius:50%;border:3px solid #ff7675;background:#232a36;box-shadow:0 2px 8px #0007;">
+                                <div style="margin-top:8px;font-weight:700;">{{ similar_player.name }}</div>
+                                <div style="color:#ff7675;font-size:1.1em;">ELO : {{ similar_player.elo|round|int }}</div>
+                            </div>
                         </div>
-                        <div style="font-size:2.2em;font-weight:700;color:#fff;">VS</div>
-                        <!-- Joueur similaire -->
-                        <div style="text-align:center;">
-                            <img src="{{ similar_player.headshot }}" alt="Headshot" style="width:80px;height:80px;border-radius:50%;border:3px solid #ff7675;background:#232a36;box-shadow:0 2px 8px #0007;">
-                            <div style="margin-top:8px;font-weight:700;">{{ similar_player.name }}</div>
-                            <div style="color:#ff7675;font-size:1.1em;">ELO : {{ similar_player.elo|round|int }}</div>
+                        <div style="text-align:center;color:#aaa;margin-top:10px;font-size:0.98em;">
+                            Player ELO Duel between players in the same position or team.
                         </div>
-                    </div>
-                    <div style="text-align:center;color:#aaa;margin-top:10px;font-size:0.98em;">
-                        Player ELO Duel between players in the same position or team.
-                    </div>
-                    <div style="text-align:center;margin-top:18px;">
-                        <a href="{{ url_for('detailed_duel', player1_id=player.id, player2_id=similar_player.id) }}">
-                            <button style="padding:8px 22px;border-radius:8px;background:#ff7675;color:#fff;font-weight:700;border:none;cursor:pointer;">
-                                Detailed duel
-                            </button>
-                        </a>
-                    </div>
-                {% else %}
-                    <div style="text-align:center;color:#aaa;margin-top:36px;font-size:1.05em;">
-                        No players found for the duel.
-                    </div>
-                {% endif %}
+                        <div style="text-align:center;margin-top:18px;">
+                            <a href="{{ url_for('detailed_duel', player1_id=player.id, player2_id=similar_player.id) }}">
+                                <button style="padding:8px 22px;border-radius:8px;background:#ff7675;color:#fff;font-weight:700;border:none;cursor:pointer;">
+                                    Detailed duel
+                                </button>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div style="text-align:center;color:#aaa;margin-top:36px;font-size:1.05em;">
+                            No players found for the duel.
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('stats_period');
+    const allStats = document.querySelectorAll('.player-stats-list .stat-item');
+    function updateStats() {
+        const val = select.value;
+        allStats.forEach(li => {
+            li.style.display = li.classList.contains('period-' + val) ? '' : 'none';
+        });
+    }
+    select.addEventListener('change', updateStats);
+    updateStats(); // Affiche la période par défaut au chargement
+});
+</script>
 </body>
 </html>

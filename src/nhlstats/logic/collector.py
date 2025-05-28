@@ -105,13 +105,46 @@ def player_stats(player_id, season_id):
     if response.status_code != 200:
         return None
     data = response.json()
-    stats = data.get("featuredStats", {}).get("regularSeason", {}).get("subSeason", {})
+
+    # Regular season (current sub-season)
+    reg_stats = data.get("featuredStats", {}).get("regularSeason", {}).get("subSeason", {})
+    # Career regular season
+    reg_career = data.get("featuredStats", {}).get("regularSeason", {}).get("career", {})
+    # Playoffs (current sub-season)
+    po_stats = data.get("featuredStats", {}).get("playoffs", {}).get("subSeason", {})
+    # Career playoffs
+    po_career = data.get("featuredStats", {}).get("playoffs", {}).get("career", {})
+
     return {
-        "gamesPlayed": stats.get("gamesPlayed", 0),
-        "goals": stats.get("goals", 0),
-        "assists": stats.get("assists", 0),
-        "points": stats.get("points", 0),
-        "plusMinus": stats.get("plusMinus", 0),
+        # Regular season (current)
+        "gamesPlayed": reg_stats.get("gamesPlayed", 0),
+        "goals": reg_stats.get("goals", 0),
+        "assists": reg_stats.get("assists", 0),
+        "points": reg_stats.get("points", 0),
+        "plusMinus": reg_stats.get("plusMinus", 0),
+
+        # Career regular season
+        "careerGamesPlayed": reg_career.get("gamesPlayed", 0),
+        "careerGoals": reg_career.get("goals", 0),
+        "careerAssists": reg_career.get("assists", 0),
+        "careerPoints": reg_career.get("points", 0),
+        "careerPlusMinus": reg_career.get("plusMinus", 0),
+
+        # Playoffs (current)
+        "playoffGamesPlayed": po_stats.get("gamesPlayed", 0),
+        "playoffGoals": po_stats.get("goals", 0),
+        "playoffAssists": po_stats.get("assists", 0),
+        "playoffPoints": po_stats.get("points", 0),
+        "playoffPlusMinus": po_stats.get("plusMinus", 0),
+
+        # Career playoffs
+        "careerPlayoffGamesPlayed": po_career.get("gamesPlayed", 0),
+        "careerPlayoffGoals": po_career.get("goals", 0),
+        "careerPlayoffAssists": po_career.get("assists", 0),
+        "careerPlayoffPoints": po_career.get("points", 0),
+        "careerPlayoffPlusMinus": po_career.get("plusMinus", 0),
+
+        # Identity
         "sweaterNumber": data.get("sweaterNumber", ""),
         "birthDate": data.get("birthDate", ""),
         "headshot": data.get("headshot", ""),
