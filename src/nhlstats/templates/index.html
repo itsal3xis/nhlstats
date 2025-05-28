@@ -39,6 +39,13 @@
             font-size: 1rem;
             background: #2e3644;
             color: #f5f6fa;
+            transition: box-shadow 0.3s, background 0.3s;
+            box-shadow: 0 0 0 0 #4fc3f7;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            background: #263042;
+            box-shadow: 0 0 0 3px #4fc3f7aa;
         }
         button {
             padding: 10px 18px;
@@ -49,11 +56,12 @@
             font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.15s;
         }
         button:hover {
             background: #039be5;
             color: #fff;
+            transform: scale(1.05);
         }
         .player-card {
             background: #1b222c;
@@ -97,14 +105,108 @@
             color: #ff7675;
             margin-top: 24px;
         }
+        .filters {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .filters select {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: #2e3644;
+            color: #f5f6fa;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .recent-players {
+            margin-top: 80px;
+        }
+        .recent-players h2 {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .recent-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+        }
+        .recent-card {
+            background: #1b222c;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 180px;
+        }
+        .recent-card img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #4fc3f7;
+            background: #232a36;
+        }
+        .filters-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #232a36;
+            border-radius: 10px;
+            padding: 10px 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 8px #0003;
+            justify-content: center;
+        }
+        .filters-box select {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: #2e3644;
+            color: #f5f6fa;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        #autocomplete-bubbles {
+            position: absolute;
+            left: 0;
+            top: 100%;
+            z-index: 10;
+            background: transparent;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        @keyframes bubbleIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        #autocomplete-bubbles > div {
+            animation: bubbleIn 0.25s cubic-bezier(.4,2,.6,1) both;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Player Search</h1>
-        <form method="post" autocomplete="off">
-            <input type="text" name="player_name" placeholder="Player Name" required autocomplete="off">
-            <button type="submit">Search</button>
+        <form method="post" autocomplete="off" style="margin-bottom:0;">
+            <div style="position:relative;width:100%;">
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" name="player_name" placeholder="Player Name" required autocomplete="off" style="flex:1;">
+                    <button type="submit">Search</button>
+                    <button type="button" class="random-btn" id="random-player-btn">🎲 Random</button>
+                </div>
+                <div id="autocomplete-bubbles"></div>
+            </div>
         </form>
         {% if player %}
             <div class="player-card" style="display:flex;align-items:center;gap:18px;">
@@ -117,7 +219,14 @@
                         <li><span class="stat-label">Name :</span> {{ player.name }}</li>
                         <li><span class="stat-label">Team :</span> {{ player.team }}</li>
                         <li><span class="stat-label">Position :</span> {{ player.position }}</li>
-                        <li><span class="stat-label">ELO :</span> {{ player.elo|round|int }}</li>
+                        <li>
+                            <span class="stat-label">ELO :</span> {{ player.elo|round(2) }}
+                            {% if player.elo_change is defined %}
+                                <span style="color:{% if player.elo_change > 0 %}#44e37b{% else %}#ff7675{% endif %};margin-left:8px;">
+                                    {% if player.elo_change > 0 %}+{% elif player.elo_change < 0 %}-{% endif %}{{ player.elo_change|abs|round(2) }}
+                                </span>
+                            {% endif %}
+                        </li>
                     </ul>
                     <div style="margin-top:18px;">
                         <a href="{{ url_for('detailed_player_info', player_id=player.id) }}">
@@ -131,80 +240,133 @@
         {% elif request.method == 'POST' %}
             <div class="not-found">No player found.</div>
         {% endif %}
+
+        <!-- Recent players section -->
+        <div class="recent-players" style="margin-top:60px;">
+            <h2 style="text-align:center;margin-bottom:12px;">Top Players in Recent Games</h2>
+            <div class="recent-list" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;">
+                {% for p in recent_players %}
+                    <div class="recent-card" style="background:#1b222c;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;min-width:180px;">
+                        {% if p.headshot %}
+                            <img src="{{ p.headshot }}" alt="Headshot" style="width:40px;height:40px;border-radius:50%;border:2px solid #4fc3f7;background:#232a36;">
+                        {% endif %}
+                        <div>
+                            <a href="{{ url_for('detailed_player_info', player_id=p.id) }}" style="color:#4fc3f7;font-weight:600;">{{ p.name }}</a>
+                            <div style="font-size:0.95em;color:#aaa;">{{ p.team }} | {{ p.position }}</div>
+                            <div style="font-size:0.95em;color:#ffe066;">
+                                ELO: {{ p.elo|round(2) }}
+                                {% if p.elo_change is defined and p.elo_change != 0 %}
+                                    <span style="color:{{ '#44e37b' if p.elo_change > 0 else '#ff7675' }};margin-left:8px;">
+                                        {% if p.elo_change > 0 %}+{% elif p.elo_change < 0 %}-{% endif %}{{ p.elo_change|abs|round(2) }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Trending players section -->
+        <div class="trending-players" style="margin-top:40px;">
+            <h2 style="text-align:center;margin-bottom:12px;">Biggest ELO Changes</h2>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;">
+                {% for p in trending_players %}
+                    <div style="background:#232a36;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;">
+                        {% if p.headshot %}
+                            <img src="{{ p.headshot }}" alt="Headshot" style="width:32px;height:32px;border-radius:50%;border:2px solid #4fc3f7;">
+                        {% endif %}
+                        <a href="{{ url_for('detailed_player_info', player_id=p.id) }}" style="color:#4fc3f7;font-weight:600;">{{ p.name }}</a>
+                        <span style="color:#ffe066;margin-left:8px;">ELO: {{ p.elo|round(2) }}</span>
+                        {% if p.elo_change is defined and p.elo_change != 0 %}
+                            <span style="color:{{ '#44e37b' if p.elo_change > 0 else '#ff7675' }};margin-left:8px;">
+                                {% if p.elo_change > 0 %}+{% elif p.elo_change < 0 %}-{% endif %}{{ p.elo_change|abs|round(2) }}
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
     <script>
-const input = document.querySelector('input[name="player_name"]');
-const container = document.createElement('div');
-container.style.position = 'relative';
-input.parentNode.insertBefore(container, input);
-container.appendChild(input);
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.querySelector('input[name="player_name"]');
+    const bubbles = document.getElementById('autocomplete-bubbles');
 
-const suggestions = document.createElement('div');
-suggestions.style.position = 'absolute';
-suggestions.style.top = '110%';
-suggestions.style.left = '0';
-suggestions.style.right = '0';
-suggestions.style.background = '#232a36';
-suggestions.style.borderRadius = '10px';
-suggestions.style.boxShadow = '0 2px 8px #0007';
-suggestions.style.zIndex = '10';
-suggestions.style.display = 'none';
-container.appendChild(suggestions);
-
-input.addEventListener('input', function() {
-    const q = input.value.trim();
-    if (q.length < 2) {
-        suggestions.style.display = 'none';
-        return;
-    }
-    fetch('/autocomplete?q=' + encodeURIComponent(q))
-        .then(r => r.json())
-        .then(data => {
-            suggestions.innerHTML = '';
-            if (data.length === 0) {
-                suggestions.style.display = 'none';
-                return;
-            }
-            data.forEach(player => {
-                const div = document.createElement('div');
-                div.style.display = 'flex';
-                div.style.alignItems = 'center';
-                div.style.gap = '12px';
-                div.style.padding = '8px 12px';
-                div.style.cursor = 'pointer';
-                div.onmouseover = () => div.style.background = '#2e3644';
-                div.onmouseout = () => div.style.background = '';
-                div.onclick = () => {
-                    input.value = player.name;
-                    suggestions.style.display = 'none';
-                };
-                if (player.headshot) {
-                    const img = document.createElement('img');
-                    img.src = player.headshot;
-                    img.alt = 'Headshot';
-                    img.style.width = '36px';
-                    img.style.height = '36px';
-                    img.style.borderRadius = '50%';
-                    img.style.objectFit = 'cover';
-                    img.style.border = '2px solid #4fc3f7';
-                    div.appendChild(img);
+    function fetchSuggestions() {
+        const q = input.value.trim();
+        if (q.length < 2) {
+            bubbles.innerHTML = '';
+            bubbles.style.display = 'none';
+            return;
+        }
+        fetch('/autocomplete?q=' + encodeURIComponent(q))
+            .then(r => r.json())
+            .then(function(data) {
+                bubbles.innerHTML = '';
+                if (data.length === 0) {
+                    bubbles.style.display = 'none';
+                    return;
                 }
-                const span = document.createElement('span');
-                span.textContent = player.name;
-                span.style.color = '#fff';
-                span.style.fontWeight = '600';
-                div.appendChild(span);
-                suggestions.appendChild(div);
+                data.slice(0, 2).forEach(function(player) { // Show only 2 bubbles
+                    const div = document.createElement('div');
+                    div.style.display = 'inline-flex';
+                    div.style.alignItems = 'center';
+                    div.style.gap = '8px';
+                    div.style.padding = '6px 12px';
+                    div.style.margin = '4px';
+                    div.style.borderRadius = '20px';
+                    div.style.background = '#232a36';
+                    div.style.color = '#fff';
+                    div.style.cursor = 'pointer';
+                    div.style.boxShadow = '0 2px 8px #0003';
+                    div.onmouseover = function() { div.style.background = '#2e3644'; };
+                    div.onmouseout = function() { div.style.background = '#232a36'; };
+                    div.onclick = function() {
+                        input.value = player.name;
+                        bubbles.innerHTML = '';
+                        bubbles.style.display = 'none';
+                    };
+                    if (player.headshot) {
+                        const img = document.createElement('img');
+                        img.src = player.headshot;
+                        img.alt = 'Headshot';
+                        img.style.width = '28px';
+                        img.style.height = '28px';
+                        img.style.borderRadius = '50%';
+                        img.style.objectFit = 'cover';
+                        img.style.border = '2px solid #4fc3f7';
+                        div.appendChild(img);
+                    }
+                    const span = document.createElement('span');
+                    span.textContent = player.name;
+                    span.style.fontWeight = '600';
+                    div.appendChild(span);
+                    bubbles.appendChild(div);
+                });
+                bubbles.style.display = 'block';
             });
-            suggestions.style.display = 'block';
-        });
-});
-
-document.addEventListener('click', function(e) {
-    if (!container.contains(e.target)) {
-        suggestions.style.display = 'none';
     }
+
+    input.addEventListener('input', fetchSuggestions);
+
+    document.addEventListener('click', function(e) {
+        if (!bubbles.contains(e.target) && e.target !== input) {
+            bubbles.innerHTML = '';
+            bubbles.style.display = 'none';
+        }
+    });
+
+    document.getElementById('random-player-btn').addEventListener('click', function() {
+        fetch('/api/random_player_id')
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    window.location.href = '/player/' + data.id;
+                }
+            });
+    });
 });
-</script>
+    </script>
 </body>
 </html>

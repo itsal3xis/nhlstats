@@ -76,9 +76,14 @@ th { color: #4fc3f7; font-weight: 600; }
                 </h1>
                 {% if player.elo %}
                     <div class="elo">
-                        ELO : {{ player.elo|round|int }}
+                        ELO : {{ player.elo|round(2) }}
                         {% if best_in_position %}
                             <span title="Best ELO at this position">👑</span>
+                        {% endif %}
+                        {% if player.elo_change is defined and player.elo_change != 0 %}
+                            <span style="color:{{ '#44e37b' if player.elo_change > 0 else '#ff7675' }};font-size:1em;">
+                                {% if player.elo_change > 0 %}+{% elif player.elo_change < 0 %}-{% endif %}{{ player.elo_change|abs|round(2) }}
+                            </span>
                         {% endif %}
                     </div>
                 {% endif %}

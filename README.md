@@ -1,6 +1,6 @@
 # 🏒 NHLStats
 
-![NHLStats Banner](https://upload.wikimedia.org/wikipedia/commons/3/3a/Hockey_rink.svg)
+![NHLStats Banner](https://assets.nhle.com/mugs/actionshots/1296x729/8479994.jpg)
 
 **NHLStats** is a modern web application for exploring advanced NHL player statistics, visualizations, and comparisons.  
 Built with Python, Flask, and Matplotlib.
@@ -36,7 +36,7 @@ Built with Python, Flask, and Matplotlib.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/nhlstats.git
+   git clone https://github.com/itsal3xis/nhlstats.git
    cd nhlstats
    ```
 
@@ -122,8 +122,4 @@ This project is licensed under the MIT License.
 
 ---
 
-<div align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Hockey_rink.svg" alt="Hockey Rink" width="200"/>
-  <br>
-  <b>Enjoy exploring NHL stats!</b>
-</div>
+

@@ -1,3 +1,4 @@
+import shutil
 import json
 import os
 import matplotlib.pyplot as plt
@@ -17,6 +18,12 @@ def player_elo():
     # Load player stats
     with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
         players = json.load(f)
+
+    # --- Copy current playerelo.json to playerelo_prev.json before updating ---
+    playerelo_path = os.path.join(STATISTICS_DIR, "playerelo.json")
+    playerelo_prev_path = os.path.join(STATISTICS_DIR, "playerelo_prev.json")
+    if os.path.exists(playerelo_path):
+        shutil.copy(playerelo_path, playerelo_prev_path)
 
     # Default ELO calculation weights
     base_elo = 1200
@@ -59,11 +66,11 @@ def player_elo():
             "name": player["name"],
             "team": player.get("team"),
             "position": player.get("position"),
-            "elo": elo
+            "elo": round(elo, 2)   # <-- round to 2 decimals
         }
 
     # Save to playerelo.json
-    with open(os.path.join(STATISTICS_DIR, "playerelo.json"), "w", encoding="utf-8") as f:
+    with open(playerelo_path, "w", encoding="utf-8") as f:
         json.dump(elos, f, ensure_ascii=False, indent=2)
 
     return elos
@@ -153,5 +160,5 @@ for abbr, elo in sorted(elos.items(), key=lambda x: x[1], reverse=True):
 """
 
 # Example usage:
-player_elo()
+#player_elo()
 

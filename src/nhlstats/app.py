@@ -1,11 +1,13 @@
 import matplotlib
 matplotlib.use('Agg')
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 import json
 import os
 import matplotlib.pyplot as plt
 import io
 import base64
+import random
+from collections import defaultdict
 
 app = Flask(__name__)
 
@@ -13,24 +15,100 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATISTICS_DIR = os.path.join(BASE_DIR, "logic", "statistics")
 
+def get_top_players_per_team(stats, elos, recent_game_ids, per_team=3):
+    players_by_team = defaultdict(list)
+    for p in stats:
+        if p['id'] in recent_game_ids:
+            team = p.get('team')
+            if team:
+                p_elo = elos.get(str(p['id']), {}).get('elo', 0)
+                players_by_team[team].append({**p, 'elo': p_elo})
+    top_players = []
+    for team, players in players_by_team.items():
+        players.sort(key=lambda x: x['elo'], reverse=True)
+        top_players.extend(players[:per_team] or players[:1])
+    return top_players
+
+def load_today_game_player_ids():
+    today_games_path = os.path.join(STATISTICS_DIR, "todayGames.json")
+    if not os.path.exists(today_games_path):
+        return []
+    with open(today_games_path, "r", encoding="utf-8") as f:
+        games = json.load(f)
+    player_ids = set()
+    for game in games:
+        for team in ("home", "away"):
+            for player in game.get(team + "_players", []):
+                player_ids.add(player["id"])
+    return list(player_ids)
+
+def load_today_game_teams():
+    today_games_path = os.path.join(STATISTICS_DIR, "todayGames.json")
+    if not os.path.exists(today_games_path):
+        return []
+    with open(today_games_path, "r", encoding="utf-8") as f:
+        games = json.load(f)
+    teams = set()
+    for game in games:
+        if "homeTeam" in game and "abbrev" in game["homeTeam"]:
+            teams.add(game["homeTeam"]["abbrev"])
+        if "awayTeam" in game and "abbrev" in game["awayTeam"]:
+            teams.add(game["awayTeam"]["abbrev"])
+    return list(teams)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     player_info = None
+    with open(os.path.join(STATISTICS_DIR, "playerelo.json"), "r", encoding="utf-8") as f:
+        elos = json.load(f)
+    with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
+        stats = json.load(f)
+    prev_elos_path = os.path.join(STATISTICS_DIR, "playerelo_prev.json")
+    prev_elos = {}
+    if os.path.exists(prev_elos_path):
+        with open(prev_elos_path, "r", encoding="utf-8") as f:
+            prev_elos = json.load(f)
+
+    # Handle search/filter
     if request.method == 'POST':
         player_name = request.form.get('player_name', '').strip().lower()
-        with open(os.path.join(STATISTICS_DIR, "playerelo.json"), "r", encoding="utf-8") as f:
-            elos = json.load(f)
-        with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
-            stats = json.load(f)
+        team = request.form.get('team', '')
+        position = request.form.get('position', '')
+        filtered_stats = stats
+        if team:
+            filtered_stats = [p for p in filtered_stats if p.get('team') == team]
+        if position:
+            filtered_stats = [p for p in filtered_stats if p.get('position') == position]
         for p in elos.values():
             if player_name in p['name'].lower():
-                stat = next((s for s in stats if s['name'].lower() == p['name'].lower()), None)
+                stat = next((s for s in filtered_stats if s['name'].lower() == p['name'].lower()), None)
                 if stat:
                     player_info = {**p, **stat}
                 else:
                     player_info = p
                 break
-    return render_template('index.html', player=player_info)
+
+    # Trending players
+    trending_players = get_trending_players(stats, elos, prev_elos, top_n=3)
+
+    # Get teams playing today
+    today_teams = load_today_game_teams()
+    recent_players = []
+    for team in today_teams:
+        team_players = [p for p in stats if p.get('team') == team]
+        for p in team_players:
+            p['elo'] = elos.get(str(p['id']), {}).get('elo', 0)
+            p['elo_change'] = round(elos.get(str(p['id']), {}).get('elo', 0) - prev_elos.get(str(p['id']), {}).get('elo', 0), 2)
+        if team_players:
+            top_player = max(team_players, key=lambda x: x['elo'])
+            recent_players.append(top_player)
+
+    return render_template(
+        'index.html',
+        player=player_info,
+        recent_players=recent_players,
+        trending_players=trending_players
+    )
 
 @app.route('/player/<int:player_id>', methods=['GET', 'POST'])
 def detailed_player_info(player_id):
@@ -42,11 +120,18 @@ def detailed_player_info(player_id):
     if not player:
         return "No player", 404
 
+    prev_elos_path = os.path.join(STATISTICS_DIR, "playerelo_prev.json")
+    prev_elos = {}
+    if os.path.exists(prev_elos_path):
+        with open(prev_elos_path, "r", encoding="utf-8") as f:
+            prev_elos = json.load(f)
     player_elo_info = elos.get(str(player_id))
     if player_elo_info and 'elo' in player_elo_info:
         player['elo'] = player_elo_info['elo']
+        player['elo_change'] = round(player['elo'] - prev_elos.get(str(player_id), {}).get('elo', 0), 2)
     else:
         player['elo'] = None
+        player['elo_change'] = 0
 
     # Comparaison par équipe OU position
     compare_by = request.form.get('compare_by', 'position')
@@ -234,8 +319,6 @@ def autocomplete():
         return jsonify([])
     with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
         stats = json.load(f)
-    with open(os.path.join(STATISTICS_DIR, "playerelo.json"), "r", encoding="utf-8") as f:
-        elos = json.load(f)
     results = []
     for player in stats:
         name = player.get('name', '')
@@ -247,9 +330,49 @@ def autocomplete():
                 'name': name,
                 'headshot': headshot
             })
-        if len(results) >= 3:
+        if len(results) >= 2:
             break
     return jsonify(results)
+
+@app.route('/random_player')
+def random_player():
+    with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
+        stats = json.load(f)
+    if not stats:
+        return "No players available", 404
+    player = random.choice(stats)
+    return redirect(url_for('detailed_player_info', player_id=player['id']))
+
+@app.route('/api/random_player_id')
+def api_random_player_id():
+    with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
+        stats = json.load(f)
+    if not stats:
+        return jsonify({'id': None})
+    player = random.choice(stats)
+    return jsonify({'id': player['id']})
+
+def get_elo_change(elos, prev_elos):
+    """Returns a dict of player_id -> elo_change (float)"""
+    changes = {}
+    for pid, p in elos.items():
+        prev = prev_elos.get(pid, {}).get('elo', 0)
+        now = p.get('elo', 0)
+        changes[pid] = round(now - prev, 2)
+    return changes
+
+def get_trending_players(stats, elos, prev_elos, top_n=3):
+    changes = get_elo_change(elos, prev_elos)
+    trending = []
+    for p in stats:
+        pid = str(p['id'])
+        if pid in elos:
+            elo = elos[pid].get('elo', 0)
+            delta = changes.get(pid, 0)
+            trending.append({**p, 'elo': elo, 'elo_change': delta})
+    # Sort by absolute value of change, biggest up or down
+    trending.sort(key=lambda x: abs(x['elo_change']), reverse=True)
+    return trending[:top_n]
 
 if __name__ == '__main__':
     # Ensure statistics directory exists
