@@ -19,57 +19,66 @@ def player_elo():
     with open(os.path.join(STATISTICS_DIR, "playerStats.json"), "r", encoding="utf-8") as f:
         players = json.load(f)
 
-    # --- Copy current playerelo.json to playerelo_prev.json before updating ---
     playerelo_path = os.path.join(STATISTICS_DIR, "playerelo.json")
     playerelo_prev_path = os.path.join(STATISTICS_DIR, "playerelo_prev.json")
     if os.path.exists(playerelo_path):
         shutil.copy(playerelo_path, playerelo_prev_path)
 
-    # Default ELO calculation weights
     base_elo = 1200
-    default_goal_weight = 10
-    default_assist_weight = 7
-    default_point_weight = 15
-    plusminus_weight = 2
-    ppg_weight = 50  # Points-per-game weight (adjust as needed)
-
-    # Defensemen get higher weights
-    defense_goal_weight = 12
-    defense_assist_weight = 9
-    defense_point_weight = 18
+    ppg_weight = 400      # Main weight for regular season PPG
+    career_ppg_weight = 120  # Career PPG is less important
+    defense_bonus = 1.10  # 10% bonus for defensemen
+    playoff_bonus_weight = 60  # Small bonus for playoff PPG
+    min_games = 10        # Ignore playoff bonus for very small samples
 
     elos = {}
     for player in players:
         position = player.get("position", "").upper()
+        # Regular season PPG
         games = player.get("gamesPlayed", 0)
         points = player.get("points", 0)
         ppg = points / games if games > 0 else 0
 
-        if position in ["D", "DEF", "DEFENSEMAN", "DEFENSEMEN"]:
-            goal_weight = defense_goal_weight
-            assist_weight = defense_assist_weight
-            point_weight = defense_point_weight
-        else:
-            goal_weight = default_goal_weight
-            assist_weight = default_assist_weight
-            point_weight = default_point_weight
+        # Career PPG
+        career_games = player.get("careerGamesPlayed", 0)
+        career_points = player.get("careerPoints", 0)
+        career_ppg = career_points / career_games if career_games > 0 else 0
+
+        # Playoff PPG (current season)
+        playoff_games = player.get("playoffGamesPlayed", 0)
+        playoff_points = player.get("playoffPoints", 0)
+        playoff_ppg = playoff_points / playoff_games if playoff_games > 0 else 0
+
+        # Career playoff PPG
+        career_playoff_games = player.get("careerPlayoffGamesPlayed", 0)
+        career_playoff_points = player.get("careerPlayoffPoints", 0)
+        career_playoff_ppg = career_playoff_points / career_playoff_games if career_playoff_games > 0 else 0
+
+        # Small playoff bonus (only if enough games)
+        playoff_bonus = 0
+        if playoff_games >= min_games:
+            playoff_bonus += playoff_ppg * playoff_bonus_weight
+        if career_playoff_games >= min_games:
+            playoff_bonus += career_playoff_ppg * (playoff_bonus_weight // 2)
+
+        # Defensemen bonus
+        is_defense = position in ["D", "DEF", "DEFENSEMAN", "DEFENSEMEN"]
+        multiplier = defense_bonus if is_defense else 1.0
 
         elo = (
             base_elo
-            + player.get("goals", 0) * goal_weight
-            + player.get("assists", 0) * assist_weight
-            + points * point_weight
-            + player.get("plusMinus", 0) * plusminus_weight
-            + ppg * ppg_weight  # Add points-per-game bonus
-        )
+            + ppg * ppg_weight
+            + career_ppg * career_ppg_weight
+            + playoff_bonus
+        ) * multiplier
+
         elos[player["id"]] = {
             "name": player["name"],
             "team": player.get("team"),
             "position": player.get("position"),
-            "elo": round(elo, 2)   # <-- round to 2 decimals
+            "elo": round(elo, 2)
         }
 
-    # Save to playerelo.json
     with open(playerelo_path, "w", encoding="utf-8") as f:
         json.dump(elos, f, ensure_ascii=False, indent=2)
 
@@ -145,20 +154,4 @@ def plot_top_players(n=20, position=None, team=None):
     plt.tight_layout()
     plt.show()
 
-# Example usages:
-#plot_top_players(20)  # Top 20 overall
-#plot_top_players(10, position="D")  # Top 10 defensemen
-#plot_top_players(15, team="BOS")  # Top 15 players from Boston
-#plot_top_players(5, position="C", team="EDM")  # Top 5 centers from Edmonton
-#plot_top_players(5, team='MTL')  # Top 5 centers from Montreal
-
-# Example usage:
-"""
-elos = team_elo(data)
-for abbr, elo in sorted(elos.items(), key=lambda x: x[1], reverse=True):
-    print(f"{abbr}: {elo}")
-"""
-
-# Example usage:
-#player_elo()
 
